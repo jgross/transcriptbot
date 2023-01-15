@@ -55,8 +55,8 @@ def get_number_of_words_in_file(file_path):
     return len(words)
 
 
-def read_file_into_text_chunks(file_path, episode_title, author):
-    csv_output = {"text": [], "episode_title": [], "author": [], "position": []}
+def read_file_into_text_chunks(file_path, title, url):
+    csv_output = {"text": [], "title": [], "url": [], "position": []}
     # Initialize a variable to keep track of the current chunk
     current_chunk = ""
 
@@ -70,6 +70,9 @@ def read_file_into_text_chunks(file_path, episode_title, author):
         with open(file_path, "r") as f:
             total_word_count = 0
             # Iterate through each line in the file
+            url = f.readline()
+            date = f.readline()
+            keywords = f.readline()
             for line in f:
                 # Split the line into words
                 words = line.split()
@@ -87,8 +90,8 @@ def read_file_into_text_chunks(file_path, episode_title, author):
                     # If the word count is 1,000, add the current chunk to the array and reset the current chunk and the word count
                     if word_count >= 400:
                         csv_output['text'].append(current_chunk)
-                        csv_output['episode_title'].append(episode_title)
-                        csv_output['author'].append(author)
+                        csv_output['title'].append(title)
+                        csv_output['url'].append(url)
                         csv_output['position'].append(position)
                         current_chunk = ""
                         word_count = 0
@@ -96,8 +99,8 @@ def read_file_into_text_chunks(file_path, episode_title, author):
             # If there are any remaining words in the current chunk after the loop is done, add them to the array
             if current_chunk:
                 csv_output['text'].append(current_chunk)
-                csv_output['episode_title'].append(episode_title)
-                csv_output['author'].append(author)
+                csv_output['title'].append(title)
+                csv_output['url'].append(url)
                 csv_output['position'].append(position)
             print(csv_output)
     else:
@@ -163,48 +166,48 @@ def read_directory_into_pinecone_embeddings(directory_path):
                 print("Reading file: " + filename + "")
                 title = filename.strip(".txt").strip(".mp3").replace("_", " ")
                 print("Title: " + title)
-                csv_output = read_file_into_text_chunks(os.path.join(directory_path, filename), title, "Andrew Huberman")
+                csv_output = read_file_into_text_chunks(os.path.join(directory_path, filename), title, "Benchling")
                 
                 # Iterate through the text chunks
                 for i in range(len(csv_output['text'])):
-                    # Get the text chunk, position, author, and episode title for the current iteration
+                    # Get the text chunk, position, url, and episode title for the current iteration
                     text = csv_output['text'][i]
                     position = csv_output['position'][i]
-                    author = csv_output['author'][i]
-                    episode_title = csv_output['episode_title'][i]
+                    url = csv_output['url'][i]
+                    title = csv_output['title'][i]
                     id += 1
 
                     # Calculate the embedding for the text chunk using OpenAI
                     embedding = get_embedding(text, DOC_EMBEDDINGS_MODEL)
 
-                     # Check if the 'hubermanlab' index already exists (create it if not)
+                     # Check if the 'benchling' index already exists (create it if not)
                     if 'transcripts' not in pinecone.list_indexes():
                         pinecone.create_index('transcripts', dimension=len(embedding))
 
-                    # Connect to the 'hubermanlab' index
+                    # Connect to the 'benchling' index
                     index = pinecone.Index('transcripts')
 
                     # Format the metadata in the desired format
-                    meta = {'text': text, 'position': position, 'author': author, 'show': 'Huberman Lab Podcast', 'episode_title': episode_title}
+                    meta = {'text': text, 'position': position, 'url': url, 'site': 'benchling.com', 'title': title}
 
-                    # Save the embedding and meta data to the 'hubermanlab' index in Pinecone
-                    index.upsert([(id.__str__(), embedding, meta)], namespace='hubermanlab')
+                    # Save the embedding and meta data to the 'benchling' index in Pinecone
+                    index.upsert([(id.__str__(), embedding, meta)], namespace='benchling')
 
 
 
 def read_directory_into_text_chunks(directory_path):
-    csv_output = {"text": [], "episode_title": [], "author": [], "position": []}
+    csv_output = {"text": [], "title": [], "url": [], "position": []}
     for filename in os.listdir(directory_path):
         if filename.endswith(".txt"):
             with open(os.path.join(directory_path, filename)) as file:
                 print("Reading file: " + filename + "")
                 title = filename.strip(".txt").strip(".mp3").replace("_", " ")
                 print("Title: " + title)
-                new_csv_output = read_file_into_text_chunks(os.path.join(directory_path, filename), title, "Andrew Huberman")
+                new_csv_output = read_file_into_text_chunks(os.path.join(directory_path, filename), title, "Benchling")
                 
                 csv_output['text'].extend(new_csv_output['text'])
-                csv_output['episode_title'].extend(new_csv_output['episode_title'])
-                csv_output['author'].extend(new_csv_output['author'])
+                csv_output['title'].extend(new_csv_output['title'])
+                csv_output['url'].extend(new_csv_output['url'])
                 csv_output['position'].extend(new_csv_output['position'])
                 
                 # csv_output.update(new_csv_output)
@@ -216,7 +219,7 @@ def main():
     # output = read_directory_into_text_chunks("data_preparation/transcripts")
 
     # # # Create a DataFrame from the chunks
-    # df = pd.DataFrame(output, columns=["text", "episode_title", "author", "position"])
+    # df = pd.DataFrame(output, columns=["text", "title", "url", "position"])
 
     # # # Save the DataFrame to a CSV file
     # df.to_csv("all_transcripts.csv", index=False)
@@ -225,7 +228,7 @@ def main():
     # convert_csv_to_embeddings_csv("all_transcripts.csv")
     # # merge_embeddings_csvs('data_preparation/goals_embeddings.csv', 'data_preparation/habits_embeddings.csv', 'data_preparation/merged_embeddings.csv')
 
-    read_directory_into_pinecone_embeddings("data_preparation/transcripts")
+    read_directory_into_pinecone_embeddings("./transcripts")
     
 if __name__ == "__main__":
     main()

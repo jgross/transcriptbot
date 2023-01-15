@@ -49,7 +49,7 @@ def request_pinecone_documents(query: str):
 
     xq = openai.Embedding.create(input=query, engine=QUERY_EMBEDDINGS_MODEL)['data'][0]['embedding']
     index = pinecone.Index('transcripts')
-    res = index.query([xq], top_k=5, include_metadata=True, namespace='hubermanlab')
+    res = index.query([xq], top_k=5, include_metadata=True, namespace='benchling')
 
     return res["matches"]
 
@@ -71,8 +71,8 @@ def construct_prompt(question: str) -> str:
         # document_section = df.loc[section_index]
         
         document_section = section_index['metadata']['text']
-        title = section_index['metadata']['episode_title']
-        position = float(section_index['metadata']['position'])
+        title = section_index['metadata']['title']
+        position = float(section_index['metadata']['url'])
 
         chosen_sections_len += len(tokenizer.tokenize(document_section)) + separator_len
         if chosen_sections_len > MAX_SECTION_LEN:
@@ -80,7 +80,7 @@ def construct_prompt(question: str) -> str:
             
         chosen_sections.append(SEPARATOR + document_section.replace("\n", " "))
         chosen_sections_indexes.append(str(section_index))
-        sources.append({"title": title, "position": position, "text": document_section})
+        sources.append({"title": title, "url": url, "text": document_section})
             
     # Useful diagnostic information
     # print(f"Selected {len(chosen_sections)} document sections:")
