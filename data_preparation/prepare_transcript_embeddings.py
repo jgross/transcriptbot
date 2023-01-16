@@ -56,7 +56,7 @@ def get_number_of_words_in_file(file_path):
 
 
 def read_file_into_text_chunks(file_path, title, url):
-    csv_output = {"text": [], "title": [], "url": [], "position": []}
+    csv_output = {"text": [], "title": [], "url": []}
     # Initialize a variable to keep track of the current chunk
     current_chunk = ""
 
@@ -85,14 +85,12 @@ def read_file_into_text_chunks(file_path, title, url):
                     
                     # Add the word to the current chunk
                     current_chunk += word + " "
-                    position = float(total_word_count) / float(number_of_words)
                     
                     # If the word count is 1,000, add the current chunk to the array and reset the current chunk and the word count
                     if word_count >= 400:
                         csv_output['text'].append(current_chunk)
                         csv_output['title'].append(title)
                         csv_output['url'].append(url)
-                        csv_output['position'].append(position)
                         current_chunk = ""
                         word_count = 0
             
@@ -101,7 +99,6 @@ def read_file_into_text_chunks(file_path, title, url):
                 csv_output['text'].append(current_chunk)
                 csv_output['title'].append(title)
                 csv_output['url'].append(url)
-                csv_output['position'].append(position)
             print(csv_output)
     else:
         # If the file does not exist, print an error message
@@ -170,9 +167,8 @@ def read_directory_into_pinecone_embeddings(directory_path):
                 
                 # Iterate through the text chunks
                 for i in range(len(csv_output['text'])):
-                    # Get the text chunk, position, url, and episode title for the current iteration
+                    # Get the text chunk, url, and episode title for the current iteration
                     text = csv_output['text'][i]
-                    position = csv_output['position'][i]
                     url = csv_output['url'][i]
                     title = csv_output['title'][i]
                     id += 1
@@ -188,7 +184,7 @@ def read_directory_into_pinecone_embeddings(directory_path):
                     index = pinecone.Index('transcripts')
 
                     # Format the metadata in the desired format
-                    meta = {'text': text, 'position': position, 'url': url, 'site': 'benchling.com', 'title': title}
+                    meta = {'text': text, 'url': url, 'site': 'benchling.com', 'title': title}
 
                     # Save the embedding and meta data to the 'benchling' index in Pinecone
                     index.upsert([(id.__str__(), embedding, meta)], namespace='benchling')
@@ -196,7 +192,7 @@ def read_directory_into_pinecone_embeddings(directory_path):
 
 
 def read_directory_into_text_chunks(directory_path):
-    csv_output = {"text": [], "title": [], "url": [], "position": []}
+    csv_output = {"text": [], "title": [], "url": []}
     for filename in os.listdir(directory_path):
         if filename.endswith(".txt"):
             with open(os.path.join(directory_path, filename)) as file:
@@ -208,7 +204,6 @@ def read_directory_into_text_chunks(directory_path):
                 csv_output['text'].extend(new_csv_output['text'])
                 csv_output['title'].extend(new_csv_output['title'])
                 csv_output['url'].extend(new_csv_output['url'])
-                csv_output['position'].extend(new_csv_output['position'])
                 
                 # csv_output.update(new_csv_output)
     return csv_output
@@ -219,7 +214,7 @@ def main():
     # output = read_directory_into_text_chunks("data_preparation/transcripts")
 
     # # # Create a DataFrame from the chunks
-    # df = pd.DataFrame(output, columns=["text", "title", "url", "position"])
+    # df = pd.DataFrame(output, columns=["text", "title", "url"])
 
     # # # Save the DataFrame to a CSV file
     # df.to_csv("all_transcripts.csv", index=False)

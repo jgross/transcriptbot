@@ -127,7 +127,7 @@ class ChatBot extends Component {
         if(topSource) {
           newMessages.push({
             sender: "bot",
-            message: "For more information see: " + topSource.title + " (" + position + "%" + " of the way through the episode.)"
+            message: "For more information see: " + topSource.title + " (" + topSource.url + ")"
           });
         }
 
