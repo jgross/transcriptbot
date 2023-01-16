@@ -19,7 +19,9 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 COMPLETIONS_MODEL = "text-davinci-003"
 
 # QUERY_EMBEDDINGS_MODEL = f"text-search-{MODEL_NAME}-query-001"
-QUERY_EMBEDDINGS_MODEL = "text-embedding-ada-002"
+#text-similarity-davinci-001
+#vs text-embedding-ada-002
+QUERY_EMBEDDINGS_MODEL = "text-similarity-davinci-001"
 
 MAX_SECTION_LEN = 3000
 SEPARATOR = "\n* "
