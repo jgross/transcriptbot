@@ -31,7 +31,7 @@ separator_len = len(tokenizer.tokenize(SEPARATOR))
 COMPLETIONS_API_PARAMS = {
     # We use temperature of 0.0 because it gives the most predictable, factual answer.
     "temperature": 0.0,
-    "max_tokens": 300,
+    "max_tokens": 2048,
     "model": COMPLETIONS_MODEL,
 }
 

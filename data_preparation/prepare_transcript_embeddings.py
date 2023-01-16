@@ -13,6 +13,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 MODEL_NAME = "ada"
+INDEX_NAME ='content'
 
 # DOC_EMBEDDINGS_MODEL = f"text-search-{MODEL_NAME}-doc-001"
 DOC_EMBEDDINGS_MODEL = "text-embedding-ada-002"
@@ -177,11 +178,11 @@ def read_directory_into_pinecone_embeddings(directory_path):
                     embedding = get_embedding(text, DOC_EMBEDDINGS_MODEL)
 
                      # Check if the 'benchling' index already exists (create it if not)
-                    if 'transcripts' not in pinecone.list_indexes():
-                        pinecone.create_index('transcripts', dimension=len(embedding))
+                    if INDEX_NAME not in pinecone.list_indexes():
+                        pinecone.create_index(INDEX_NAME, dimension=len(embedding))
 
                     # Connect to the 'benchling' index
-                    index = pinecone.Index('transcripts')
+                    index = pinecone.Index(INDEX_NAME)
 
                     # Format the metadata in the desired format
                     meta = {'text': text, 'url': url, 'site': 'benchling.com', 'title': title}
@@ -210,20 +211,7 @@ def read_directory_into_text_chunks(directory_path):
 
 
 def main():
-    # Read the file into chunks
-    # output = read_directory_into_text_chunks("data_preparation/transcripts")
-
-    # # # Create a DataFrame from the chunks
-    # df = pd.DataFrame(output, columns=["text", "title", "url"])
-
-    # # # Save the DataFrame to a CSV file
-    # df.to_csv("all_transcripts.csv", index=False)
-
-    # print("Converting CSV to embeddings CSV");
-    # convert_csv_to_embeddings_csv("all_transcripts.csv")
-    # # merge_embeddings_csvs('data_preparation/goals_embeddings.csv', 'data_preparation/habits_embeddings.csv', 'data_preparation/merged_embeddings.csv')
-
-    read_directory_into_pinecone_embeddings("./transcripts")
+    read_directory_into_pinecone_embeddings("./content")
     
 if __name__ == "__main__":
     main()
