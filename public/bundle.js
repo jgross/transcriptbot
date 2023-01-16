@@ -1019,16 +1019,16 @@ var ChatBot = /*#__PURE__*/function (_Component) {
       this.setState({
         messages: [].concat(_toConsumableArray(this.state.messages), [{
           sender: "bot",
-          message: "Welcome to the Every Science Chatbot! I answer questions based on information contained in Huberman Lab podcast episode transcripts. Here are a few things you can ask me:"
+          message: "Welcome to the Benchling Chatbot! I answer questions based on information contained in Benchling's Tweets and Website. Here are a few things you can ask me:"
         }, {
           sender: "bot",
-          message: "-> What is dopamine?"
+          message: "-> What does benchling provide?"
         }, {
           sender: "bot",
-          message: "->  What is the best way to establish a habit?"
+          message: "-> Where did benchling present?"
         }, {
           sender: "bot",
-          message: "->  Why is morning sunlight viewing important?"
+          message: "-> What is the recent product annoucment made?"
         }])
       });
     }

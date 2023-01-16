@@ -23,7 +23,7 @@ QUERY_EMBEDDINGS_MODEL = "text-embedding-ada-002"
 
 MAX_SECTION_LEN = 3000
 SEPARATOR = "\n* "
-NO_KNOWLEDGE_STRING = "Sorry, I don't know. I can only construct a response based on transcripts from Huberman Lab episodes and I can't find an answer. If it's helpful, my corpus only includes episodes where Dr. Huberman appears alone. I currently can't parse interview episodes."
+NO_KNOWLEDGE_STRING = "Sorry, I don't know. I can only construct a response based on data collected from Benchling's site and tweets and I can't find an answer."
 
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 separator_len = len(tokenizer.tokenize(SEPARATOR))
