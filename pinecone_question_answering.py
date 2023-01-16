@@ -72,7 +72,7 @@ def construct_prompt(question: str) -> str:
         
         document_section = section_index['metadata']['text']
         title = section_index['metadata']['title']
-        position = float(section_index['metadata']['url'])
+        position = section_index['metadata']['url']
 
         chosen_sections_len += len(tokenizer.tokenize(document_section)) + separator_len
         if chosen_sections_len > MAX_SECTION_LEN:
