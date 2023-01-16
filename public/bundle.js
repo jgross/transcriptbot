@@ -1073,7 +1073,6 @@ var ChatBot = /*#__PURE__*/function (_Component) {
           response = JSON.parse(response);
           var message = response.answer;
           var topSource = response.sources[0];
-          var url = topSource.url; 
           var newMessages = _toConsumableArray(_this2.state.messages);
           newMessages.push({
             sender: "bot",
@@ -1082,7 +1081,8 @@ var ChatBot = /*#__PURE__*/function (_Component) {
           if (topSource) {
             newMessages.push({
               sender: "bot",
-              message: "For more information see: " + topSource.title + " (" + url + ")"
+              message: "For more information see: " + topSource.title + " (" + topSource.url + ")"
+            });
           }
           _this2.setState({
             messages: newMessages
