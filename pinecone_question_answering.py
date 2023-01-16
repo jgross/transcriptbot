@@ -20,8 +20,7 @@ COMPLETIONS_MODEL = "text-davinci-003"
 
 # QUERY_EMBEDDINGS_MODEL = f"text-search-{MODEL_NAME}-query-001"
 #text-similarity-davinci-001
-#vs text-embedding-ada-002
-QUERY_EMBEDDINGS_MODEL = "text-similarity-davinci-001"
+QUERY_EMBEDDINGS_MODEL = "text-embedding-ada-002"
 
 MAX_SECTION_LEN = 3000
 SEPARATOR = "\n* "
@@ -50,7 +49,7 @@ def request_pinecone_documents(query: str):
     )
 
     xq = openai.Embedding.create(input=query, engine=QUERY_EMBEDDINGS_MODEL)['data'][0]['embedding']
-    index = pinecone.Index('transcripts')
+    index = pinecone.Index('content')
     res = index.query([xq], top_k=5, include_metadata=True, namespace='benchling')
 
     return res["matches"]
