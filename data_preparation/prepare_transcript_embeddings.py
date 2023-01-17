@@ -5,6 +5,7 @@ import csv
 import pinecone
 import string
 import random
+import json 
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,39 +14,11 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 MODEL_NAME = "ada"
-INDEX_NAME ='content'
+INDEX_NAME ='dotmaticsv2'
 
 # DOC_EMBEDDINGS_MODEL = f"text-search-{MODEL_NAME}-doc-001"
 DOC_EMBEDDINGS_MODEL = "text-embedding-ada-002"
 
-def generate_unique_id():
-    # Generate a random 16-character string using the characters A-Z, a-z, and 0-9
-    unique_id = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-    return unique_id
-
-def merge_embeddings_csvs(csv1, csv2, output):
-    # Open both input files
-    with open(csv1, 'r') as file1, open(csv2, 'r') as file2:
-        # Create a reader for each file
-        reader1 = csv.reader(file1)
-        reader2 = csv.reader(file2)
-
-        # Open the output file
-        with open(output, 'w') as output:
-            # Create a writer for the output file
-            writer = csv.writer(output)
-
-            # Iterate over the rows in both files, and write them to the output file
-            for row1, row2 in zip(reader1, reader2):
-                writer.writerow(row1 + row2)
-
-
-def get_number_of_lines_in_file(file_path):
-    with open(file_path, 'r') as fp:
-        for count, line in enumerate(fp):
-            pass
-    print('Total Lines', count + 1) 
-    return count + 1
 
 def get_number_of_words_in_file(file_path):
     with open(file_path, 'r') as file:
@@ -106,40 +79,6 @@ def read_file_into_text_chunks(file_path, title, url):
         print("The file could not be found.")
     return(csv_output)
 
-def get_embedding(text: str, model: str):
-    print("Getting embedding for:" + text)
-    try: 
-        result = openai.Embedding.create(
-            model=model,
-            input=text
-        )
-        return result["data"][0]["embedding"]
-    except Exception as e:
-        print ("Error: " + str(e))
-        return ""
-
-def get_doc_embedding(text: str):
-    return get_embedding(text, DOC_EMBEDDINGS_MODEL)
-
-def get_query_embedding(text: str):
-    return get_embedding(text, QUERY_EMBEDDINGS_MODEL)
-
-def compute_doc_embeddings(df: pd.DataFrame):
-    """
-    Create an embedding for each row in the dataframe using the OpenAI Embeddings API.
-    
-    Return a dictionary that maps between each embedding vector and the index of the row that it corresponds to.
-    """
-    return {
-        idx: get_doc_embedding(r.text.replace("\n", " ")) for idx, r in df.iterrows()
-    }
-
-def convert_csv_to_embeddings_csv(fname: str):
-    df = pd.read_csv(fname)
-    embeddings = compute_doc_embeddings(df)
-    embeddings_df = pd.DataFrame.from_dict(embeddings, orient='index')
-    result = pd.concat([df, embeddings_df], axis=1)
-    result.to_csv(fname + "_embeddings.csv", index=False)
 
 def get_embedding(text: str, model: str):
     print("Getting embedding for:" + text)
@@ -150,6 +89,10 @@ def get_embedding(text: str, model: str):
         print("Error: " + str(e))
         return ""
 
+def write_json_to_file(json_obj, file_path):
+    with open(file_path, 'w') as outfile:
+        json.dump(json_obj, outfile)
+
 def read_directory_into_pinecone_embeddings(directory_path):
     # Initialize Pinecone with your API key and environment
     pinecone.init(
@@ -158,13 +101,19 @@ def read_directory_into_pinecone_embeddings(directory_path):
     )
     id = 0
 
+    if INDEX_NAME not in pinecone.list_indexes():
+        pinecone.create_index(INDEX_NAME, dimension=1536)
+
+    # Connect to the  index
+    index = pinecone.Index(INDEX_NAME)
+
     for filename in os.listdir(directory_path):
         if filename.endswith(".txt"):
             with open(os.path.join(directory_path, filename)) as file:
                 print("Reading file: " + filename + "")
                 title = filename.strip(".txt").strip(".mp3").replace("_", " ")
                 print("Title: " + title)
-                csv_output = read_file_into_text_chunks(os.path.join(directory_path, filename), title, "Benchling")
+                csv_output = read_file_into_text_chunks(os.path.join(directory_path, filename), title, INDEX_NAME)
                 
                 # Iterate through the text chunks
                 for i in range(len(csv_output['text'])):
@@ -177,41 +126,18 @@ def read_directory_into_pinecone_embeddings(directory_path):
                     # Calculate the embedding for the text chunk using OpenAI
                     embedding = get_embedding(text, DOC_EMBEDDINGS_MODEL)
 
-                     # Check if the 'benchling' index already exists (create it if not)
-                    if INDEX_NAME not in pinecone.list_indexes():
-                        pinecone.create_index(INDEX_NAME, dimension=len(embedding))
-
-                    # Connect to the 'benchling' index
-                    index = pinecone.Index(INDEX_NAME)
-
                     # Format the metadata in the desired format
-                    meta = {'text': text, 'url': url, 'site': 'benchling.com', 'title': title}
+                    meta = {'text': text, 'url': url, 'site': 'dotmatics.com', 'title': title}
 
                     # Save the embedding and meta data to the 'benchling' index in Pinecone
-                    index.upsert([(id.__str__(), embedding, meta)], namespace='benchling')
+                    if index.upsert([(id.__str__(), embedding, meta)], namespace='dotmatics'):
+                        write_json_to_file(embedding, os.path.join(directory_path, filename + '.json'))
 
-
-
-def read_directory_into_text_chunks(directory_path):
-    csv_output = {"text": [], "title": [], "url": []}
-    for filename in os.listdir(directory_path):
-        if filename.endswith(".txt"):
-            with open(os.path.join(directory_path, filename)) as file:
-                print("Reading file: " + filename + "")
-                title = filename.strip(".txt").strip(".mp3").replace("_", " ")
-                print("Title: " + title)
-                new_csv_output = read_file_into_text_chunks(os.path.join(directory_path, filename), title, "Benchling")
-                
-                csv_output['text'].extend(new_csv_output['text'])
-                csv_output['title'].extend(new_csv_output['title'])
-                csv_output['url'].extend(new_csv_output['url'])
-                
-                # csv_output.update(new_csv_output)
-    return csv_output
+                        
 
 
 def main():
-    read_directory_into_pinecone_embeddings("./content")
+    read_directory_into_pinecone_embeddings("./dotmatics")
     
 if __name__ == "__main__":
     main()

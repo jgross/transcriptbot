@@ -16,6 +16,7 @@ MODEL_NAME = "curie"
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_INDEX = os.getenv("PINECONE_INDEX")
 COMPLETIONS_MODEL = "text-davinci-003"
 
 # QUERY_EMBEDDINGS_MODEL = f"text-search-{MODEL_NAME}-query-001"
@@ -24,7 +25,7 @@ QUERY_EMBEDDINGS_MODEL = "text-embedding-ada-002"
 
 MAX_SECTION_LEN = 3000
 SEPARATOR = "\n* "
-NO_KNOWLEDGE_STRING = "Sorry, I don't know. I can only construct a response based on data collected from Benchling's site and tweets and I can't find an answer."
+NO_KNOWLEDGE_STRING = "Sorry, I don't know. I can only construct a response based on data collected from " + PINECONE_NAMESPACE + "'s site and tweets and I can't find an answer."
 
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 separator_len = len(tokenizer.tokenize(SEPARATOR))
@@ -49,8 +50,8 @@ def request_pinecone_documents(query: str):
     )
 
     xq = openai.Embedding.create(input=query, engine=QUERY_EMBEDDINGS_MODEL)['data'][0]['embedding']
-    index = pinecone.Index('content')
-    res = index.query([xq], top_k=5, include_metadata=True, namespace='benchling')
+    index = pinecone.Index(PINECONE_INDEX)
+    res = index.query([xq], top_k=5, include_metadata=True, namespace=PINECONE_NAMESPACE)
 
     return res["matches"]
 
