@@ -17,6 +17,7 @@ MODEL_NAME = "curie"
 openai.api_key = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX = os.getenv("PINECONE_INDEX")
+PINECONE_NAMESPACE = os.getenv("PINECONE_NAMESPACE")
 COMPLETIONS_MODEL = "text-davinci-003"
 
 # QUERY_EMBEDDINGS_MODEL = f"text-search-{MODEL_NAME}-query-001"
